@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>注册页</title>
+
+    <link rel="stylesheet" href="/static/plugins/elementui/index.css">
+    <link rel="stylesheet" href="/static/plugins/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+
+    <style scoped>
+        .reg-wrap {
+            box-sizing: border-box;
+            width: 100%;
+            height: 100%;
+            padding-top: 10%;
+        }
+
+        .reg-container {
+            border-radius: 10px;
+            margin: 0px auto;
+            width: 350px;
+            padding: 30px 35px 15px 35px;
+            background: #fff;
+            border: 1px solid #eaeaea;
+            text-align: left;
+            box-shadow: 0 0 20px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .title {
+            margin: 0px auto 40px auto;
+            text-align: center;
+            color: #505458;
+        }
+    </style>
+
+
+</head>
+<body>
+
+<div id="reg">
+
+    <div class="reg-wrap">
+        <el-form class="reg-container">
+            <h1 class="title">注册</h1>
+            <el-form-item label="账号">
+                <el-input type="text" v-model="ruleForm.userName" placeholder="登录账号"></el-input>
+            </el-form-item>
+            <el-form-item label="登录密码">
+                <el-input type="password" v-model="ruleForm.psd" placeholder="登录密码"></el-input>
+            </el-form-item>
+            <el-form-item label="电话">
+                <el-input type="text" v-model="ruleForm.phone" placeholder="电话号码"></el-input>
+            </el-form-item>
+            <a href="reg">立即登录</a>
+            <el-form-item>
+                <el-button type="primary" style="width: 100%;" @click="submitForm()">注册</el-button>
+            </el-form-item>
+        </el-form>
+    </div>
+
+</div>
+
+
+</body>
+
+<script type="text/javascript" src="/static/js/vue.js"></script>
+
+<script type="text/javascript" src="/static/plugins/elementui/index.js"></script>
+
+<script  type="text/javascript" src="/static/js/jquery.min.js"></script>
+
+<script type="text/javascript" src="/static/js/axios-0.18.0.js"></script>
+
+<script>
+
+    new Vue({
+        el: '#reg',
+        data: {
+            ruleForm: {
+                userName: '',
+                psd: '',
+                phone: ''
+            }
+        },
+        methods: {
+            // 注册
+            submitForm() {
+                axios.post("/rrsUser/", this.ruleForm).then((res)=>{
+                    if(res.data.flag) {
+                        location.href = "login"
+                        this.$message.success("注册成功，为您自动跳转到登录页面！")
+                    } else{
+                        this.$message.error("注册失败");
+                    }
+                });
+            },
+
+            //
+            resetForm(formName) {
+                this.$refs[formName].resetFields();
+            }
+        }
+    })
+
+</script>
+
+</html>

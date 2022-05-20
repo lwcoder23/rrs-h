@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>餐厅推荐系统</title>
+    <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" name="viewport">
+
+    <link rel="stylesheet" href="/static/plugins/elementui/index.css">
+    <link rel="stylesheet" href="/static/plugins/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+
+</head>
+<body>
+
+<div id="app">
+
+    <!-- 导航栏 -->
+    <el-menu class="el-menu-demo" mode="horizontal" @select="handleSelect">
+
+        <el-menu-item index="1">推荐系统首页</el-menu-item>
+
+        <el-submenu style="float: right" index="3">
+            <template slot="title">我的</template>
+            <el-menu-item index="3-1">个人中心</el-menu-item>
+            <el-menu-item index="3-2">我的收藏</el-menu-item>
+            <el-menu-item v-show="role" index="3-3">后台中心</el-menu-item>
+            <el-menu-item index="3-4">退出登录</el-menu-item>
+        </el-submenu>
+
+        <el-menu-item index="2" style="float: right">
+            <el-avatar :size="19" :src="avatarSrc">{{}}</el-avatar>
+        </el-menu-item>
+
+        <el-menu-item index="4" style="float: right">查看推荐</el-menu-item>
+
+    </el-menu>
+
+    <!-- body -->
+    <!-- 搜索 -->
+    <div class="search-box" style="width: 100%; height: 100px; display: flex; flex-direction: column; justify-content: center;">
+        <el-row>
+            <el-col :span="16">
+                <el-autocomplete
+                        v-model="state"
+                        :fetch-suggestions="querySearchAsync"
+                        placeholder="请输入内容"
+                        @select="handleSelect"
+                        style="width: 500px; left: 450px"
+                ></el-autocomplete>
+            </el-col>
+            <el-col :span="4">
+                <el-button type="primary" round>搜索</el-button>
+            </el-col>
+        </el-row>
+    </div>
+
+    <!--rotation-->
+    <div class="rotation">
+        <el-carousel :interval="4000" type="card" height="400px">
+            <el-carousel-item v-for="item in 6" :key="item.id">
+                <img src="http://r9jvdhm81.hd-bkt.clouddn.com/restaurantImage/1.jpg" alt="未找到图片">
+            </el-carousel-item>
+        </el-carousel>
+    </div>
+
+    <!--分类-->
+    <div class="classify" style="padding-top: 20px">
+        <el-card class="box-card">
+            <div slot="header" class="clearfix">
+                <span>所有分类</span>
+            </div>
+            <div v-for="item in interesting" :key="item" class="text item" style="float: left; margin-right: 30px; margin-bottom: 15px">
+                <el-button>{{item.interesting}}</el-button>
+            </div>
+        </el-card>
+    </div>
+
+    <div>
+        <el-divider><i class="el-icon-s-goods"></i></el-divider>
+    </div>
+
+    <el-row :gutter="40">
+        <el-col :span="4" v-for="o in restaurant" :key="o">
+            <el-card :body-style="{ padding: '0px' }">
+                <img src="https://shadow.elemecdn.com/app/element/hamburger.9cf7b091-55e9-11e9-a976-7f4d0b07eef6.png" class="image">
+                <div style="padding: 13px;">
+                    <span>{{o.name}}</span>
+                    <div class="bottom clearfix">
+                        <el-button type="text" class="button">添加到收藏</el-button>
+                    </div>
+                </div>
+            </el-card>
+        </el-col>
+    </el-row>
+
+    <el-pagination
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+            :current-page="pagination.currentPage"
+            :page-sizes="[5, 10, 15, 20]"
+            :page-size="pagination.pageSize"
+            layout="total, sizes, prev, pager, next, jumper"
+            :total="total"
+    >
+    </el-pagination>
+
+</div>
+
+</body>
+
+<script type="text/javascript" src="/static/js/vue.js"></script>
+
+<script type="text/javascript" src="/static/plugins/elementui/index.js"></script>
+
+<script  type="text/javascript" src="/static/js/jquery.min.js"></script>
+
+<script type="text/javascript" src="/static/js/axios-0.18.0.js"></script>
+
+<script>
+    new Vue({
+        el: '#app',
+        data() {
+            return {
+                user: {},
+                avatarSrc: '',
+                interesting: [], //id interesting
+                restaurant: [], // id img rName score
+                rotation: [],
+                pagination: {//分页相关模型数据
+                    currentPage: 1,//当前页码
+                    pageSize:10,//每页显示的记录数
+                    total:0,//总记录数
+                    type:'',
+                    name:'',
+                    interesting:''
+                }
+            }
+        },
+
+        created() {
+            // 执行查询方法
+            this.getAll();
+            this.initialMsg();
+        },
+
+        methods: {
+            //初始化 user 信息
+            initialMsg(){
+                // 用户信息
+
+                // 类别信息
+                axios.get("/rrsInteresting").then((res)=>{
+                    this.interesting = res.data.data;
+                })
+                this.getRotation()
+            },
+
+            // 查询方法
+            getAll() {
+                param = "?query";
+                param += "&name=" + this.pagination.name;
+                param += "&interesting=" + this.pagination.interesting;
+
+                axios.get("/rrsRestaurant/" + this.pagination.currentPage + "/" + this.pagination.pageSize + param).then((res) => {
+                    this.restaurant = res.data.data.records;
+                    this.pagination.currentPage = res.data.data.current;
+                    this.pagination.pageSize = res.data.data.size;
+                    this.pagination.total = res.data.data.total;
+                });
+            },
+            getRotation() {
+                axios.get("/rotation").then((res)=>{
+                    this.rotation = res.data.data.records;
+                })
+            },
+
+            handleSizeChange(newSize) {
+                this.pagination.pageSize = newSize
+                this.getAll()
+            },
+            // currentPage
+            handleCurrentChange(newPage) {
+                this.pagination.currentPage = newPage
+                this.getAll()
+            },
+
+            // 导航栏方法
+            handleSelect(key, keyPath) {
+
+                switch (key)  {
+                    case '1': location.href = 'index';break;
+                    case '2': location.href = 'index';break;
+                    case '3-1': location.href = '/my';break;
+                    case '3-2': location.href = '/collect';break;
+                    case '3-3': location.href = 'http://127.0.0.1:8080/login';break;
+                    case '3-4': location.href = '/login';break;
+                    case '4': location.href = '/recommend';break;
+                }
+
+            },
+
+            // 搜索提示
+            querySearchAsync() {
+                restaurants = this.restaurants;
+            },
+
+            //设置cookie
+            /*setCookie(cname, info, exdays) {
+                let exdate=new Date();
+                //保存的天数, 单位是ms
+                exdate.setTime(exdate.getTime() + exdays);
+                //字符串拼接cookie
+                window.document.cookie= cname + "=" + info + ";path=/;expires=" + exdate.toGMTString();
+            },*/
+
+            //清除cookie
+            /*clearCookie(){
+                this.setCookie("","",-1)
+            },*/
+
+            // 取一个键值对（可以是数组）
+            /*getCookie(cname) {
+                var name = cname + "=";
+                var ca = document.cookie.split(';');
+                for(var i = 0; i < ca.length; i++) {
+                    var c = ca[i];
+                    while (c.charAt(0) == ' ') {
+                        c = c.substring(1);
+                    }
+                    if (c.indexOf(name)  == 0) {
+                        return c.substring(name.length, c.length);
+                    }
+                }
+                return "";
+            }*/
+
+        }
+
+    })
+</script>
+
+</html>
